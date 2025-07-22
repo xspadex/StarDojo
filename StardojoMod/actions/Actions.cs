@@ -1792,6 +1792,49 @@ namespace ActionSpace.actions
             return null;
         }
 
+        public static List<TileInfo> GetViewingTiles()
+        {
+            var tileInfoList = new List<TileInfo>();
+            var viewport = Game1.viewport;
+            var tileSize = Game1.tileSize;
+            var map = Game1.currentLocation?.Map;
+
+            if (map == null)
+            {
+                return tileInfoList; // 如果没有地图，返回空列表
+            }
+
+            // 将像素坐标转换为地块坐标
+            // 使用 (value + tileSize - 1) / tileSize 进行向上取整，确保包含部分可见的地块
+            int minX = viewport.X / tileSize;
+            int maxX = (viewport.X + viewport.Width + tileSize - 1) / tileSize;
+            int minY = viewport.Y / tileSize;
+            int maxY = (viewport.Y + viewport.Height + tileSize - 1) / tileSize;
+
+            int mapWidth = map.Layers[0].LayerWidth;
+            int mapHeight = map.Layers[0].LayerHeight;
+
+            // 确保坐标不会超出地图边界
+            minX = Math.Max(0, minX);
+            maxX = Math.Min(mapWidth - 1, maxX);
+            minY = Math.Max(0, minY);
+            maxY = Math.Min(mapHeight - 1, maxY);
+
+
+            // 遍历所有可见地块并获取信息
+            for (int tileX = minX; tileX <= maxX; tileX++)
+            {
+                for (int tileY = minY; tileY <= maxY; tileY++)
+                {
+                    // 直接复用已有的 GetTileInfo 方法
+                    TileInfo tileInfo = GetTileInfo(tileX.ToString(), tileY.ToString());
+                    tileInfoList.Add(tileInfo);
+                }
+            }
+
+            return tileInfoList;
+        }
+
         // Auto-pathing method
         public static void StartAutoPathing(Vector2 targetTile, Action<bool> onComplete, Mod mod)
         {
@@ -1960,6 +2003,8 @@ namespace ActionSpace.actions
             public GameMetaData MetaData { get; set; }
             public CallBackData CallBackData { get; set; }
             public List<TileInfo> SurroundingsData { get; set; }
+
+            public List<TileInfo> ViewingTiles { get; set; } // <--- 新增字段
             public List<FurnitureInfo> Furnitures { get; set; }
         }
 
@@ -2082,6 +2127,8 @@ namespace ActionSpace.actions
             Console.WriteLine("time_point_7: " + DateTime.Now.ToString("HH:mm:ss.fff"));
             var surroundingsData = GetSurroundings(size);
             Console.WriteLine("time_point_8: " + DateTime.Now.ToString("HH:mm:ss.fff"));
+            var viewingTilesData = GetViewingTiles();
+            Console.WriteLine("time_point_9: " + DateTime.Now.ToString("HH:mm:ss.fff"));
 
 
             // buildings eliminated
@@ -2258,7 +2305,8 @@ namespace ActionSpace.actions
                 {
                     OnDayStarted = dayStartTimes
                 },
-                SurroundingsData = surroundingsData
+                SurroundingsData = surroundingsData,
+                ViewingTiles = viewingTilesData
             };
             return res;
         }
@@ -2690,6 +2738,8 @@ namespace ActionSpace.actions
             public string? exit_info { get; set; }
             public string? npc_info { get; set; }
             public bool? placeable { get; set; }
+
+            public string? door_info { get; set; }
         }
 
         public static TileInfo GetTileInfo(string x, string y)
@@ -2704,6 +2754,7 @@ namespace ActionSpace.actions
             string? debris_info = "";
             string? furniture_info = "";
             string? exit_info = "";
+            string? door_info = "";
             string? npc_info = "";
             string? tile_properties_info = "";
 
@@ -2812,6 +2863,15 @@ namespace ActionSpace.actions
                 }
             }
 
+            foreach(var door in Game1.currentLocation.doors.FieldDict.ToList())
+            {
+                var doorX = door.Key.X;
+                var doorY = door.Key.Y;
+                if (doorX == xI && doorY == yI){
+                    door_info = "Door of " + door.Value.Value;
+                }
+            }
+
             var tile_info = new TileInfo
             {
                 position = position,
@@ -2824,7 +2884,8 @@ namespace ActionSpace.actions
                 furniture_at_tile = furniture_info,
                 exit_info = exit_info,
                 npc_info = npc_info,
-                placeable = Game1.currentLocation.isTilePlaceable(key)
+                placeable = Game1.currentLocation.isTilePlaceable(key),
+                door_info = door_info
             };
             
             return tile_info;

@@ -216,6 +216,113 @@ namespace ActionSpace.actions
             }
         }
 
+        // 创建一个静态的 Random 实例以获得更好的随机性，避免在短时间内多次创建
+        private static readonly Random random = new Random();
+
+        public static bool IsTileSafeToStandOn(GameLocation location, Point tile)
+        {
+            // 1. Check if tile is on the map at all.
+            if (!location.isTileOnMap(tile.X, tile.Y))
+            {
+                return false;
+            }
+
+            // 2. Check if the base tile is passable (e.g., not a wall).
+            // This is a fundamental check.
+            if (!location.isTilePassable(new Location(tile.X, tile.Y), Game1.viewport))
+            {
+                return false;
+            }
+
+            if (location.IsTileBlockedBy(new Vector2(tile.X, tile.Y)))
+            {
+                return false;
+            }
+
+            if (location.isWaterTile(tile.X, tile.Y))
+            {
+                return false;
+            }
+
+            if (location.isWaterTile(tile.X, tile.Y))
+            {
+                return false;
+            }
+
+            // 3. Check if the tile is occupied by a solid object.
+            // `isTileOccupied` checks for chests, furniture, characters, etc.
+            // It's a very comprehensive check.
+            
+            // 4. Specifically check for trees, which can sometimes bypass other checks.
+            if (location.terrainFeatures.TryGetValue(new Vector2(tile.X, tile.Y), out TerrainFeature feature) && feature is Tree)
+            {
+                return false;
+            }
+
+            // If all checks pass, the tile is safe.
+            return true;
+        }
+
+        /// <summary>
+        public static void TeleportPlayerToRandomValidLocation(Mod mod)
+        {
+            GameLocation location = Game1.currentLocation;
+            if (location == null)
+            {
+                Console.WriteLine("错误：无法获取当前地图位置。");
+                return;
+            }
+
+            // 1. 创建一个列表，用于存储所有可以安全站立的地块坐标
+            List<Point> validTiles = new List<Point>();
+
+            int mapWidth = location.Map.Layers[0].LayerWidth;
+            int mapHeight = location.Map.Layers[0].LayerHeight;
+
+            // 2. 遍历地图上的每一个地块
+            for (int x = 0; x < mapWidth; x++)
+            {
+                for (int y = 0; y < mapHeight; y++)
+                {
+                    Vector2 tileVector = new Vector2(x, y);
+
+                    // 3. 使用 isTileLocationTotallyClear 函数进行检查
+                    // 这个函数会检查地块是否可通过、没有物体、没有大型资源、没有建筑等。
+                    // 它是最可靠的“可站立”检查方法。
+                    if (IsTileSafeToStandOn(location, new Point(x, y)))
+                    {
+                        validTiles.Add(new Point(x, y));
+                    }
+                }
+            }
+
+            // 4. 从有效地块列表中随机选择一个
+            if (validTiles.Count > 0)
+            {
+                int randomIndex = random.Next(validTiles.Count);
+                Point randomTile = validTiles[randomIndex];
+
+                // 5. 将玩家传送到选定的坐标
+                // 使用 setTileLocation 可以精确地将玩家设置在地块上
+                Game1.player.setTileLocation(new Vector2(randomTile.X, randomTile.Y));
+
+                Console.WriteLine($"玩家已成功移动到随机位置: ({randomTile.X}, {randomTile.Y})");
+            }
+            else
+            {
+                Console.WriteLine("警告：在当前地图上没有找到任何可以安全站立的位置。");
+            }
+        }
+
+        public static void warp(string map, string x, string y, Mod mod)
+        {
+            int xInt = int.Parse(x);
+            int yInt = int.Parse(y);
+            mod.Monitor.Log($"Warping player to {map} at ({xInt}, {yInt})...", LogLevel.Info);
+            // Use the game's built-in warp function for the player character
+            Game1.warpFarmer(map, xInt, yInt, false);
+        }
+
         public static void sell_current_item(Mod mod)
         {
             Actions.sell_to_shop(mod);

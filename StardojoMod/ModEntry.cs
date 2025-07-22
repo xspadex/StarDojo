@@ -742,6 +742,11 @@ namespace observeSpaceTest
         private void OnUpdateTicked(object? sender, UpdateTickedEventArgs e)
         {
             Actions.updatePixelData(this);
+            if (Game1.timeOfDay >= 2400)
+            {
+                // 将时间设置为早上8点
+                Game1.timeOfDay = 800;
+            }
             if (Game1.activeClickableMenu is ShippingMenu shippingMenu)
             {
                 this.Monitor.Log("Shipping menu is on");

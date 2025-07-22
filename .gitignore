@@ -219,3 +219,6 @@ env/logs/evaluations.npz
 env/logs/best_model.zip
 env/logs/best_model.zip
 env/logs/evaluations.npz
+
+**/vlm_grounding_data/
+**/screen_shot_buffer/

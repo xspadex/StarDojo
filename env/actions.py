@@ -342,6 +342,19 @@ class ActionProxy:
     def exit_to_title(self) -> None:
         message = f"exit_title"
         self._post_message(message)
+        
+    def teleport_random(self) -> None:
+        message = f"TeleportPlayerToRandomValidLocation"
+        self._post_message(message)
+        
+    def do_nothing(self, duration: float = 0.1) -> None:
+        message = f"resume_game"
+        self._post_message(message)
+        time.sleep(duration)
+        
+    def warp(self, map_name: str, x: int, y: int) -> None:
+        message = f"warp%{map_name}%{x}%{y}"
+        self._post_message(message)
 
     def exit_menu(self):
         message = "exit_menu"

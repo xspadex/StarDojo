@@ -443,7 +443,7 @@ if __name__ == "__main__":
     # find_and_kill_process_by_port(ports_to_clear)
 
     env_params = {
-        'port': 6000,
+        'port': 10783,
         'save_index': 0,
         'new_game': False,
         'image_save_path': "./screen_shot_buffer",
@@ -495,6 +495,7 @@ if __name__ == "__main__":
     # env.action_proxy.choose_option(0,0)
     # env.action_proxy.move(4,17)
     # env.action_proxy.interact()
+    print(obs)
     print("debug")
     # after = time.time()
     # print(f"Time: {after - before}")
