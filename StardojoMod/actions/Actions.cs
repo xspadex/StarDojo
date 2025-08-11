@@ -45,6 +45,7 @@ using MessagePack;
 using System.Text;
 using System.Threading.Tasks;
 using PeterO.Cbor;
+using StardewValley.Monsters;
 
 namespace ActionSpace.actions
 {
@@ -1976,6 +1977,7 @@ namespace ActionSpace.actions
             public string CurrentProduce { get; set; }
             public int Happiness { get; set; }
             public bool isTouched { get; set; }
+            public string Location { get; set; }
         }
 
         public class PetData
@@ -2006,6 +2008,8 @@ namespace ActionSpace.actions
 
             public List<TileInfo> ViewingTiles { get; set; } // <--- 新增字段
             public List<FurnitureInfo> Furnitures { get; set; }
+            public List<MonsterInfo> Monsters { get; set; }
+            public List<OreInfo> OreCoordinates { get; set; }
         }
 
         public class CallBackData
@@ -2069,6 +2073,78 @@ namespace ActionSpace.actions
             public bool JojaMembership { get; set; }
             public List<MuseumPieceInfo> Museum { get; set; }
             public List<QuestInfo> Quests { get; set; }
+        }
+
+        public class MonsterInfo
+        {
+            public string Name { get; set; }
+            public Vector2 Position { get; set; }
+        }
+
+        public class OreInfo
+        {
+            public string Name { get; set; }
+            public Vector2 Position { get; set; }
+        }
+
+        public static List<MonsterInfo> GetMonsterInfo()
+        {
+            var monsterList = new List<MonsterInfo>();
+            if (Game1.player.currentLocation == null) return monsterList;
+            
+            // 获取玩家的格子坐标，作为计算的基准
+            Vector2 playerTile = new Vector2(Game1.player.TilePoint.X, Game1.player.TilePoint.Y);
+
+            foreach (var character in Game1.player.currentLocation.characters)
+            {
+                if (character is Monster monster)
+                {
+                    // 1. 获取怪物的格子坐标 (从像素坐标转换)
+                    Vector2 monsterTile = new Vector2(monster.TilePoint.X, monster.TilePoint.Y);
+                    
+                    // 2. 计算相对坐标
+                    Vector2 relativePosition = monsterTile - playerTile;
+
+                    monsterList.Add(new MonsterInfo
+                    {
+                        Name = monster.Name,
+                        Position = relativePosition // 存储计算后的相对坐标
+                    });
+                }
+            }
+            return monsterList;
+        }
+
+        /// <summary>
+        /// 获取当前地图上所有矿石和石头相对于玩家的格子坐标信息。
+        /// </summary>
+        public static List<OreInfo> GetOreInfo()
+        {
+            var oreList = new List<OreInfo>();
+            if (Game1.player.currentLocation == null) return oreList;
+
+            // 获取玩家的格子坐标，作为计算的基准
+            Vector2 playerTile = new Vector2(Game1.player.TilePoint.X, Game1.player.TilePoint.Y);
+
+            foreach (var pair in Game1.player.currentLocation.Objects.Pairs)
+            {
+                var obj = pair.Value;
+                if (obj.Name.Contains("Stone") || obj.Name.Contains("Ore") || obj.Name.Contains("Node"))
+                {
+                    // 1. 矿石的格子坐标就是字典的键 (pair.Key)
+                    Vector2 oreTile = pair.Key;
+
+                    // 2. 计算相对坐标
+                    Vector2 relativePosition = oreTile - playerTile;
+                    
+                    oreList.Add(new OreInfo
+                    {
+                        Name = obj.Name,
+                        Position = relativePosition // 存储计算后的相对坐标
+                    });
+                }
+            }
+            return oreList;
         }
 
         // Export game data as JSON and return it as a string
@@ -2282,6 +2358,12 @@ namespace ActionSpace.actions
                     position = counter.Value,
                 });
             }
+            var monsters = new List<MonsterInfo>();
+            var oreCoordinates = new List<OreInfo>();
+            if (Game1.player.currentLocation.Name.StartsWith("UndergroundMine")){
+                monsters = GetMonsterInfo();
+                oreCoordinates = GetOreInfo();
+            }
 
             Console.WriteLine("time_point_11: " + DateTime.Now.ToString("HH:mm:ss.fff"));
             var res = new GameData()
@@ -2306,7 +2388,9 @@ namespace ActionSpace.actions
                     OnDayStarted = dayStartTimes
                 },
                 SurroundingsData = surroundingsData,
-                ViewingTiles = viewingTilesData
+                ViewingTiles = viewingTilesData,
+                Monsters = monsters,
+                OreCoordinates = oreCoordinates
             };
             return res;
         }
@@ -2559,6 +2643,7 @@ namespace ActionSpace.actions
                     Friendship = a.friendshipTowardFarmer.Value,
                     IsAdult = a.isAdult(),
                     CurrentProduce = a.currentProduce.Value,
+                    Location = a.currentLocation.Name,
                     Happiness = a.happiness.Value,
                     isTouched = a.wasPet.Value
                 }).ToList(),

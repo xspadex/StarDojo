@@ -355,6 +355,33 @@ class ActionProxy:
     def warp(self, map_name: str, x: int, y: int) -> None:
         message = f"warp%{map_name}%{x}%{y}"
         self._post_message(message)
+        
+    def navigate(self, map_name):
+        if map_name == "JoshHouse":
+            message = f"warp%{map_name}%64%15"
+        elif map_name == "SebastianRoom":
+            message = f"warp%{map_name}%8%8"
+        elif map_name == "AnimalShop":
+            message = f"warp%{map_name}%12%16"
+        elif map_name == "Saloon":
+            message = f"warp%{map_name}%10%20"
+        elif map_name == "HarveyRoom":
+            message = f"warp%{map_name}%5%5"
+        elif map_name.lower() == "mine":
+            message = "warp_mine%1"
+        elif map_name.lower().startswith("mine"):
+            level = map_name.lower().split("mine")[1]
+            message = f"warp_mine%{level}"
+        elif map_name == ("Farm"):
+            message = f"warp%{map_name}%64%19"
+        elif map_name == "SeedShop":
+            message = f"warp%{map_name}%4%19"
+        elif map_name.startswith("UndergroundMine"):
+            level = map_name.split("UndergroundMine")[1]
+            message = f"warp_mine%{level}"
+        else:
+            return
+        self._post_message(message)
 
     def exit_menu(self):
         message = "exit_menu"

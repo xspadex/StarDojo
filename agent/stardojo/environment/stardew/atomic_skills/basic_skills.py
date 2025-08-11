@@ -261,17 +261,17 @@ def menu(option, menu_name):
             actionproxy.open_map()
 
 
-#@register_skill("navigate")
-#def navigate(name):
-#     """
-#     Navigate to a certain location. Call template: navigate(name = ...)
-#     For example:
-#         - call navigate("farm") to navigate to farm
-#
-#     Parameters:
-#      - name: The name of the location to navigate to.
-#     """
-#     actionproxy.navigate(name)
+@register_skill("navigate")
+def navigate(name):
+    """
+    Navigate to a certain location. Call template: navigate(name = ...)
+    For example:
+        - call navigate("farm") to navigate to farm
+
+    Parameters:
+     - name: The name of the location to navigate to.
+    """
+    actionproxy.navigate(name)
 
 
 

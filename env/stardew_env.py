@@ -44,6 +44,137 @@ PORT_ARG = "--port-id"
 SAMPLE_RATE = "--sample-rate" # percentage
 
 
+def check_location(obs_json):
+    if not obs_json["player"]["location"] == "Farm" and not "Barn" in obs_json["player"]["location"] and not "Coop" in obs_json["player"]["location"]:
+        obs_json["water_pool_location"] = ""
+        obs_json["farm_animals"] = ""
+        obs_json["farm_buildings"] = ""
+    all_counters = obs_json["shop_counters"]
+    obs_json["shop_counters"] = ""
+    if obs_json["player"]["location"] == "SeedShop":
+        obs_json["shop_counters"] = [item for item in all_counters if item["name"] == "SeedShop Counter"][0]
+    elif obs_json["player"]["location"] == "FishShop":
+        obs_json["shop_counters"] = [item for item in all_counters if item["name"] == "FishShop Counter"][0]
+    elif obs_json["player"]["location"] == "ScienceHouse":
+        obs_json["shop_counters"] = [item for item in all_counters if item["name"] == "ScienceHouse Counter"][0]
+    elif obs_json["player"]["location"] == "Blacksmith":
+        obs_json["shop_counters"] = [item for item in all_counters if item["name"] == "Blacksmith Counter"][0]
+    elif obs_json["player"]["location"] == "JojaMart":
+        obs_json["shop_counters"] = [item for item in all_counters if item["name"] == "JojaMart Counter"][0]
+    elif obs_json["player"]["location"] == "AnimalShop":
+        obs_json["shop_counters"] = {"name": "AnimalShop Counter", "position": (12, 15)}
+    elif obs_json["player"]["location"] == "Saloon":
+        obs_json["shop_counters"] = {"name": "Saloon Counter", "position": (10, 19)}
+    else:
+        obs_json["shop_counters"] = ""
+        
+    obs_json["furniture"] = ""
+    if obs_json["player"]["location"] == "FarmHouse":
+        obs_json["furniture"] = obs_json["furnitures"]
+        
+    return obs_json
+
+
+def convert_all_coordinates(obs_json):
+    """
+    将 obs_json 中所有实体的绝对坐标转换为相对于玩家的坐标，
+    并直接覆盖原有的坐标字段。
+
+    Args:
+        obs_json (dict): 包含游戏世界信息的字典。
+
+    Returns:
+        dict: 更新了相对坐标的 obs_json 字典。
+    """
+    # 检查玩家位置是否存在
+    if not (player_data := obs_json.get('Player')) or not (player_pos := player_data.get('Position')):
+        print("错误：在 obs_json 中未找到 'Player' 或 'Position'。")
+        return obs_json
+
+    player_x = player_pos.get('X', 0)
+    player_y = player_pos.get('Y', 0)
+
+    # --- 统一处理字符串格式的坐标 (e.g., 'x, y') ---
+    # 需要处理的键: ('Buildings', 'doorPosition'), ('Crops', 'position'), ('ShopCounters', 'position')
+    keys_with_string_pos = {
+        'Buildings': 'doorPosition',
+        'Crops': 'position',
+        'ShopCounters': 'position'
+    }
+
+    for main_key, pos_key in keys_with_string_pos.items():
+        if item_list := obs_json.get(main_key):
+            for item in item_list:
+                if pos_str := item.get(pos_key):
+                    try:
+                        x_str, y_str = pos_str.split(',')
+                        x = int(x_str.strip())
+                        y = int(y_str.strip())
+                        # 直接用元组覆盖原有的字符串坐标
+                        item[pos_key] = (x - player_x, y - player_y)
+                    except (ValueError, AttributeError):
+                        item[pos_key] = None # 格式错误则设为 None
+                        print(f"警告：跳过格式错误的坐标: {main_key}.{pos_key} = {pos_str}")
+
+    # --- 处理农场动物的坐标 (字典格式) ---
+    if (farm_data := obs_json.get('Farm')) and (farm_animals := farm_data.get("Animals")):
+        for animal in farm_animals:
+            if animal_pos := animal.get('Position'):
+                try:
+                    animal_x = animal_pos.get('X', 0)
+                    animal_y = animal_pos.get('Y', 0)
+                    # 直接覆盖原有的字典坐标
+                    animal['Position'] = {'X': animal_x - player_x, 'Y': animal_y - player_y}
+                except (TypeError, AttributeError):
+                     animal['Position'] = None
+                     print(f"警告：跳过格式错误的动物坐标: {animal_pos}")
+                     
+    # 3. 处理嵌套在 'Farm' 下的建筑物坐标 (字符串格式)
+    if (farm_data := obs_json.get('Farm')) and (farm_buildings := farm_data.get('Buildings')):
+        for building in farm_buildings:
+            if pos_str := building.get('position'):
+                try:
+                    x_str, y_str = pos_str.split(',')
+                    x = int(x_str.strip())
+                    y = int(y_str.strip())
+                    # 直接用元组 (x, y) 覆盖
+                    building['position'] = (x - player_x, y - player_y)
+                except (ValueError, AttributeError):
+                    building['position'] = None
+                    print(f"警告：跳过格式错误的坐标: Farm.Buildings.position = {pos_str}")
+
+
+    # --- 处理 NPC 的坐标 (列表格式) ---
+    if npcs := obs_json.get('NPCs'):
+        for npc in npcs:
+            if npc_pos := npc.get('Position'):
+                try:
+                    if isinstance(npc_pos, list) and len(npc_pos) == 2:
+                        npc_x, npc_y = npc_pos
+                        # 直接覆盖原有的列表坐标
+                        npc['Position'] = [npc_x - player_x, npc_y - player_y]
+                    else:
+                        raise TypeError # 主动抛出异常以便捕获
+                except (TypeError, ValueError):
+                    npc['Position'] = None
+                    print(f"警告：跳过格式错误的NPC坐标: {npc_pos}")
+
+    if 'Furnitures' in obs_json and isinstance(obs_json['Furnitures'], list):
+        for item in obs_json['Furnitures']:
+            del item["boundingBox"]
+            if 'position' in item and isinstance(item['position'], str):
+                try:
+                    coords = item['position'].split(',')
+                    if len(coords) == 2:
+                        obj_x = int(coords[0].strip())
+                        obj_y = int(coords[1].strip())
+                        item['position'] = [obj_x - player_x, obj_y - player_y]
+                except (ValueError, IndexError):
+                    print(f"Warning: Could not parse furniture position '{item.get('name', 'N/A')}': {item['Position']}")
+
+    return obs_json
+
+
 def call_actions(action: str, print_debug : bool = True) -> None|str:
     '''
     you can use console to play the game
@@ -232,6 +363,7 @@ class StarDojo(gym.Env):
         obs_json = self.action_proxy.observe()
         after = time.time()
         obs_json = json.loads(obs_json)
+        obs_json = convert_all_coordinates(obs_json)
         # decode RGBA map of screenshot
         screen_shot_raw = obs_json['ScreenShot']
         screen_shot_raw = base64.b64decode(screen_shot_raw)
@@ -247,6 +379,7 @@ class StarDojo(gym.Env):
 
         # preprocess the observation json
         obs_json_processed = self.obs_preprocess(obs_json, 3, 3)
+        obs_json_processed = check_location(obs_json_processed)
 
         if is_rl:
             return obs_json_processed, obs_json
@@ -328,7 +461,14 @@ class StarDojo(gym.Env):
         #     exit_y = exit["position"]["Y"]
         #     if exit_x >= 0 and exit_y >= 0:
         #         exits.append(exit)
-
+        
+        for item in info_list:
+            position = item["position"]
+            x = position[0]
+            y = position[1]
+            rx = x - obs["Player"]["Position"][0]
+            ry = y - obs["Player"]["Position"][1]
+            item["position"] = [rx, ry]
 
         return_dict = obs
         return_dict.update({
@@ -362,6 +502,8 @@ class StarDojo(gym.Env):
             "npcs": obs["NPCs"],
             "shop_counters": obs["ShopCounters"],
             "current_menu": obs["CurrentMenuData"],
+            "monsters": obs["Monsters"],
+            "ore_coordinates": obs["OreCoordinates"],
         })
         
         def lowercase_keys(d):
@@ -495,6 +637,15 @@ if __name__ == "__main__":
     # env.action_proxy.choose_option(0,0)
     # env.action_proxy.move(4,17)
     # env.action_proxy.interact()
+    env.action_proxy.resume_game()
+    from env.tasks.utils.init_task import InitTaskProxy
+    # env.action_proxy.navigate("FarmHouse")
+    # InitTaskProxy(10783).warp_shop("gus")
+    # InitTaskProxy(10783).warp_mine("5")
+    
+    # env.action_proxy.warp("HarveyRoom", 5, 5)
+    # env.action_proxy.warp("AnimalShop", 12, 16)
+    # env.action_proxy.warp("SebastianRoom", 8, 8)
     print(obs)
     print("debug")
     # after = time.time()
