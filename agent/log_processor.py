@@ -110,8 +110,8 @@ def process_string(input_str):
 
 
 def process_log_messages(work_dir):
-
-    log_path = os.path.join(work_dir, "logs/stardojo.log")
+    pid = os.getpid()
+    log_path = os.path.join(work_dir, f"logs/stardojo_pid_{pid}.log")
 
     with open(log_path, "r", encoding="utf-8") as fd:
         log = fd.read()

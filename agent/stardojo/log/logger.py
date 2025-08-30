@@ -76,8 +76,8 @@ class CPUMemColorFormatter(logging.Formatter):
 
 
 class Logger(metaclass=Singleton):
-
-    log_file = 'stardojo.log'
+    pid = os.getpid()
+    log_file = f'stardojo_pid_{pid}.log'
 
     log_dir = './logs'
     work_dir = None

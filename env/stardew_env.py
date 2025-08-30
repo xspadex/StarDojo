@@ -283,7 +283,8 @@ class StarDojo(gym.Env):
             saved_game_file_name: str = None,
             observe_size: int = 3,
             output_video: bool = False,
-            max_image_storage: int = 2
+            max_image_storage: int = 2,
+            delete_old_images: bool = False
         ) -> None:
         super(StarDojo, self).__init__()
         self.new_game = new_game
@@ -314,7 +315,7 @@ class StarDojo(gym.Env):
                 action_proxy = actions.ActionProxy(self.port)
                 action_proxy.wait_for_server()
 
-        # time.sleep(1)
+        time.sleep(5)
 
         self.save_index = save_index
         self.action_space = gym.spaces.MultiDiscrete([2, 2, 8, 150, 36, 5, 1, 200, 200, 1000])
@@ -333,6 +334,7 @@ class StarDojo(gym.Env):
         self.frame_rate = 30 
         self.video_writer = None
         self.output_video = output_video
+        self.delete_old_images = delete_old_images
 
     def reset(
             self,
@@ -410,7 +412,7 @@ class StarDojo(gym.Env):
             # img = img.resize((640, 320)) #debug only
             # 如果deque已满，获取并删除即将被移除的图片文件
                 
-            if not img_path in self.image_paths and len(self.image_paths) == self.image_paths.maxlen:
+            if self.delete_old_images and not img_path in self.image_paths and len(self.image_paths) == self.image_paths.maxlen:
                 old_img_path = self.image_paths[0]  # 获取最旧的图片路径
                 if os.path.exists(old_img_path):
                     os.remove(old_img_path)  # 删除文件
@@ -629,7 +631,7 @@ if __name__ == "__main__":
     # env.action_proxy.interact()
     # env.action_proxy.resume_game()
 
-    obs = env._get_obs()
+    # obs = env._get_obs()
     # env.action_proxy.move(-1,22)
     # env.action_proxy.move(0,0)
     # env.action_proxy.interact()
@@ -637,8 +639,9 @@ if __name__ == "__main__":
     # env.action_proxy.choose_option(0,0)
     # env.action_proxy.move(4,17)
     # env.action_proxy.interact()
-    env.action_proxy.resume_game()
+    # env.action_proxy.resume_game()
     from env.tasks.utils.init_task import InitTaskProxy
+    from env.tasks.farming import Farming
     # env.action_proxy.navigate("FarmHouse")
     # InitTaskProxy(10783).warp_shop("gus")
     # InitTaskProxy(10783).warp_mine("5")
@@ -646,7 +649,15 @@ if __name__ == "__main__":
     # env.action_proxy.warp("HarveyRoom", 5, 5)
     # env.action_proxy.warp("AnimalShop", 12, 16)
     # env.action_proxy.warp("SebastianRoom", 8, 8)
-    print(obs)
+    # env.action_proxy.warp("Farm", 10, 10)
+    # env.action_proxy.warp("BusStop", 10, 25)
+    # env.action_proxy.exit_to_title()
+    # task_for_launch = Farming("sadasd", "", 0, "", "save_new", [], "", "")
+    # env.task_proxy = InitTaskProxy(10783)
+    # task_for_launch.init_task(env.task_proxy)
+    # print(obs)
+    env.action_proxy.craft("wood fnce")
+    # env.action_proxy.move(0, 1)
     print("debug")
     # after = time.time()
     # print(f"Time: {after - before}")

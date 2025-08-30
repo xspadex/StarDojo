@@ -52,7 +52,7 @@ class Config(metaclass=Singleton):
 
     # Skill retrieval defaults
     skill_configs = {
-        constants.SKILL_CONFIG_FROM_DEFAULT: False,
+        constants.SKILL_CONFIG_FROM_DEFAULT: True,
         constants.SKILL_CONFIG_RETRIEVAL: False,
         constants.SKILL_CONFIG_MAX_COUNT: 20,
         constants.SKILL_CONFIG_MODE: constants.SKILL_LIB_MODE_FULL, # FULL, BASIC, or NONE

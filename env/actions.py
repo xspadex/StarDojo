@@ -238,19 +238,44 @@ class ActionProxy:
             raise ValueError("Direction must be between 1 and 4")
         message = f"move_step%{direction}"
         self._post_message(message)
+        
+    def craft(self, item) -> None:
+        """
+        Craft an item based on its name (str) or ID (int).
 
-    def craft(self, item_id: int) -> None:
-        '''
-        ### Usage
-        Craft an item based on its item ID.
+        Parameters:
+        - item_identifier: The name (str) or ID (int) of the item to craft.
+        """
+        message = ""
+        
+        # 1. 判断传入的参数是字符串还是数字
+        if isinstance(item, str):
+            # 这是处理字符串（物品名称）的逻辑
+            words = item.split(" ")
+            capitalized_words = [word.capitalize() for word in words]
+            capitalized_item = " ".join(capitalized_words)
+            print(f"Crafting by name: {capitalized_item}")
+            message = f"craft%{capitalized_item}"
 
-        ### Paramaters
-        item_id: All possible items to be crafted
-        '''
-        crafting_dict = _crafting_recipes["content"]
-        crafting_id = list(crafting_dict.keys())[item_id]
-        message = f"craft%{crafting_id}"
+        elif isinstance(item, int): # 或者用 numbers.Number 更通用
+            # 这是处理整数（物品ID）的逻辑
+            print(f"Crafting by ID: {item}")
+            crafting_dict = _crafting_recipes["content"] # 假设这是你的配方字典
+            
+            # 注意：这里的逻辑需要确保 item_identifier 是有效的索引
+            if item < len(crafting_dict.keys()):
+                crafting_id = list(crafting_dict.keys())[item]
+                message = f"craft%{crafting_id}"
+            else:
+                print(f"Error: Invalid item ID {item}")
+                return # ID无效，直接返回
+        else:
+            # 如果传入了其他类型，抛出错误
+            raise TypeError("item must be a string or an integer.")
+
+        # 2. 发送消息
         self._post_message(message)
+        print(f"Posting message: {message}")
 
     def turn(self, direction: int) -> None:
         if direction<0 or direction>3:
@@ -267,17 +292,27 @@ class ActionProxy:
         message = f"exit_menu"
         self._post_message(message)
         
-    def use(self, direction: int) -> None:
-        '''
-        ### Usage
-        Use an item from the inventory, specifying the direction of use.
-
-        ### Paramaters
-        slot_index: Inventory slot indices
-        direction: 0: up, 1: right, 2: down, 3: left
-        '''
-        self.turn(direction)
-        message = f"use"
+    def use(self, direction) -> None:
+        if isinstance(direction, str):
+            if direction == "up":
+                direction_int = 0
+            elif direction == "right":
+                direction_int = 1
+            elif direction == "down":
+                direction_int = 2
+            elif direction == "left":
+                direction_int = 3
+            else:
+                raise ValueError("Invalid direction string")
+        elif isinstance(direction, int):
+            if direction not in [0, 1, 2, 3]:
+                raise ValueError("Invalid direction integer")
+            direction_int = direction
+        else:
+            raise TypeError("Direction must be a string or an integer")
+        
+        self.turn(direction_int)
+        message = "use"
         self._post_message(message)
 
     def choose_item(self, slot_index: int) -> None:
@@ -288,26 +323,65 @@ class ActionProxy:
     #     message = f"interact"
     #     self._post_message(message)
         
-    def interact(self, direction: int) -> None:
+    def interact(self, direction) -> None:
         '''
         ### Usage
-        Use an item from the inventory, specifying the direction of use.
+        Interact with an object in a specified direction.
 
-        ### Paramaters
-        slot_index: Inventory slot indices
-        direction: 0: up, 1: right, 2: down, 3: left
+        ### Parameters
+        direction: 
+            Integer: 0: up, 1: right, 2: down, 3: left
+            String: "up", "right", "down", "left"
         '''
-        self.turn(direction)
-        message = f"interact"
+        if isinstance(direction, str):
+            # Convert the string to an integer direction
+            if direction == "up":
+                direction_int = 0
+            elif direction == "right":
+                direction_int = 1
+            elif direction == "down":
+                direction_int = 2
+            elif direction == "left":
+                direction_int = 3
+            else:
+                raise ValueError(f"Invalid direction string: '{direction}'")
+        elif isinstance(direction, int):
+            # Use the integer directly, but validate it
+            if direction not in [0, 1, 2, 3]:
+                raise ValueError(f"Invalid direction integer: '{direction}'")
+            direction_int = direction
+        else:
+            # Raise an error for unsupported types
+            raise TypeError("Direction must be a string or an integer.")
+        
+        self.turn(direction_int)
+        message = "interact"
         self._post_message(message)
         
-    def choose_option(self, option_index: int, quantity: int = None, direction: int = None) -> None:
+    def choose_option(self, option_index: int, quantity: int = None, direction = None) -> None:
         if quantity is None:
             quantity = 0
         if direction is None:
             direction = 0
-        message = f"choose_option%{option_index}%{quantity}%{direction}"
+        if isinstance(direction, str):
+            if direction == "in":
+                direction_int = 0
+            elif direction == "out":
+                direction_int = 1
+            else:
+                print(f"Invalid direction string: '{direction}'")
+                return
+        else:
+            direction_int = direction
+        message = f"choose_option%{option_index}%{quantity}%{direction_int}"
         self._post_message(message)
+        
+    def menu(self, option, menu_name):
+        if option == "close":
+            self.exit_menu()
+        else:
+            if menu_name == "map":
+                self.open_map()
 
     def sell_current_item(self):
         message = "sell_current_item"

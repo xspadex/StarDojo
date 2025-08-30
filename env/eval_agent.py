@@ -1,7 +1,7 @@
 import os.path
 
 from stardew_env import *
-from agent.stardojo.stardojo_react_agent import PipelineRunner, config, atexit, exit_cleanup
+from agent.stardojo.stardojo_react_agent import PipelineRunnerIsolated, atexit, exit_cleanup
 from tasks.base import *
 import importlib.util
 import uuid
@@ -59,7 +59,7 @@ class SkillExecutor:
                 setattr(self, func_name, func)
 
 
-class StarDojoLLM(StarDojo):
+class StarDojoLLMIsolated(StarDojo):
 
     def __init__(
             self, port: int = 10783,
@@ -67,7 +67,7 @@ class StarDojoLLM(StarDojo):
             new_game: bool = False,
             is_RL: bool = False,
             image_save_path: str = None,
-            agent: PipelineRunner = None,
+            agent: PipelineRunnerIsolated = None,
             task: TaskBase = None,
             image_obs: bool = False,
             needs_pausing: bool = True,
@@ -88,7 +88,7 @@ class StarDojoLLM(StarDojo):
             self.action_proxy.wait_for_server()
             time.sleep(5)
             task.init_task(self.task_proxy)
-            time.sleep(8)
+            time.sleep(5)
             if needs_shared_memory:
                 self.action_proxy.set_mmap_reader()
             self.agent.reconfigure_root_logger(port=None, task=None)
@@ -263,12 +263,16 @@ class StarDojoLLM(StarDojo):
         return self._process_obs(obs)
 
     def step(self, autoAction=None):
+        logging.log(logging.INFO, f"Starting to step.")
         obs = self._get_processed_obs()
+        image_path = obs["image_paths"][-1]
+        logging.log(logging.INFO, f"Image path: {image_path}")
         if self.needs_pausing:
             logging.log(logging.INFO, f"Starting to plan, the game is paused.")
             self.action_proxy.pause_game()
         try:
             skill_steps = self.agent.run_planning(obs, image_obs=self.image_obs, step_num = self.step_num)
+            logging.log(logging.INFO, f"Planning finished, skill_steps: {skill_steps}")
         except Exception as e:
             logging.log(logging.ERROR, f"Error in planning: {e}")
             if self.needs_pausing:
@@ -304,7 +308,8 @@ class StarDojoLLM(StarDojo):
         # return self.obs, 0, False, False, info
 
 
-def run_stardojo(
+# 用于多进程运行的单元，保证每个进程的运行环境是独立的
+def run_stardojo_isolated(
     port: int,
     save_index: int,
     new_game: bool,
@@ -312,45 +317,43 @@ def run_stardojo(
     output_video: bool,
     task_name: str,
     task_id: int,
-    checkpoint_interval: int = 5,
+    log_path: str,
+    checkpoint_interval: int = 100,
     env_config_path: str = "./conf/env_config_stardew.json",
     llm_config_path: str = "./conf/opensrc_config.json",
     embed_config_path: str = "./conf/openai_config.json",
     needs_shared_memory: bool = False,
-    max_image_storage: int = 2
+    max_image_storage: int = 2,
 ):
 
     logging.basicConfig(
-        filename='app.log',
+        filename=log_path,
         filemode='a',
         format='%(asctime)s - %(levelname)s - %(message)s',
         datefmt='%Y-%m-%d %H:%M:%S',
         level=logging.INFO
     )
 
-    config.checkpoint_interval = checkpoint_interval
-
-    config.load_env_config(env_config_path)
-
     task = load_task.load_task(task_name, task_id)
     
     if task.difficulty == "easy":
-        config.max_turn_count = 30
+        max_turn_count = 30
     elif task.difficulty == "medium":
-        config.max_turn_count = 50
+        max_turn_count = 50
     else:
-        config.max_turn_count = 200
+        max_turn_count = 200
 
-    react_agent = PipelineRunner(
+    react_agent = PipelineRunnerIsolated(
         llm_provider_config_path=llm_config_path,
         embed_provider_config_path=embed_config_path,
+        envConfig=env_config_path,
         task_description=task.llm_description,
-        use_self_reflection=False,
-        use_task_inference=False
+        checkpoint_interval=checkpoint_interval,
+        max_turn_count=max_turn_count
     )
     atexit.register(exit_cleanup, react_agent)
 
-    stardojo_env = StarDojoLLM(
+    stardojo_env = StarDojoLLMIsolated(
         port=port,
         save_index=save_index,
         new_game=new_game,
@@ -361,7 +364,7 @@ def run_stardojo(
         task=task,
         output_video=output_video,
         needs_shared_memory=needs_shared_memory,
-        max_image_storage=max_image_storage
+        max_image_storage=max_image_storage,
     )
 
     time.sleep(1)
@@ -374,11 +377,7 @@ def run_stardojo(
             obs, reward, terminated, truncated, info = stardojo_env.step()
             step += 1
 
-            if step % checkpoint_interval == 0:
-                checkpoint_path = os.path.join(react_agent.checkpoint_path, f'checkpoint_{step:06d}.json')
-                # react_agent.memory.save(checkpoint_path)
-
-            if step > config.max_turn_count:
+            if step > max_turn_count:
                 print('Max steps reached, exiting.')
                 break
 
@@ -396,36 +395,3 @@ def run_stardojo(
     react_agent.pipeline_shutdown()
     stardojo_env.exit()
 
-
-if __name__ == "__main__":
-    parser = argparse.ArgumentParser(description="Run StarDojo LLM Task")
-    parser.add_argument("--port", type=int, default=10783, help="Port number for the environment")
-    parser.add_argument("--save_index", type=int, default=0, help="Save index slot")
-    parser.add_argument("--new_game", action="store_true", help="Start a new game")
-    parser.add_argument("--image_save_path", type=str, default="../env/screen_shot_buffer", help="Directory to save screenshots")
-    parser.add_argument("--output_video", action="store_true", help="Whether to record output video")
-    parser.add_argument("--task_name", type=str, default="farming_lite", help="Name of the task to load")
-    parser.add_argument("--task_id", type=int, default=12, help="ID of the task to load")
-    parser.add_argument("--checkpoint_interval", type=int, default=5, help="Interval of saving checkpoints")
-    parser.add_argument("--env_config_path", type=str, default="./conf/env_config_stardew.json", help="Path to environment config")
-    parser.add_argument("--llm_config_path", type=str, default="./conf/opensrc_config.json", help="Path to LLM config")
-    parser.add_argument("--embed_config_path", type=str, default="./conf/openai_config.json", help="Path to embedding config")
-    parser.add_argument("--needs_shared_memory", default=False, help="Whether to use shared memory")
-    parser.add_argument("--max_image_storage", type=int, default=2, help="Maximum number of images to store")
-    args = parser.parse_args()
-
-    run_stardojo( 
-        port=args.port,
-        save_index=args.save_index,
-        new_game=True,
-        image_save_path=args.image_save_path,
-        output_video=args.output_video,
-        task_name=args.task_name,
-        task_id=args.task_id,
-        checkpoint_interval=args.checkpoint_interval,
-        env_config_path=args.env_config_path,
-        llm_config_path=args.llm_config_path,
-        embed_config_path=args.embed_config_path,
-        needs_shared_memory=args.needs_shared_memory,
-        max_image_storage=args.max_image_storage
-    )
