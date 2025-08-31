@@ -187,6 +187,7 @@ runs/
 /res/tool/subfinder/
 test*/
 test*
+!TestUtils.cs
 /tmp
 /papers
 
