@@ -1,0 +1,7 @@
+{
+    "key_var": "OPEN_SRC_KEY",
+    "emb_model": "text-embedding-ada-002",
+    "comp_model": "LLaMA-Factory/saves/qwen2_5vl-3b/full/sft_v0/",
+    "base_url": "http://localhost:8000/v1",
+    "is_azure": false
+}

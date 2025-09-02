@@ -790,7 +790,8 @@ class PipelineRunnerIsolated():
         print("Actions", actions)
         print("Action Planning Reasoning\n", action_planning_reasoning)
         logging.log(logging.INFO, f"Action Planning Reasoning\n {action_planning_reasoning}")
-
+        from env.my_logger import stardojo_log
+        stardojo_log.info(f"Action Planning Reasoning\n {action_planning_reasoning}")
         pre_energy = self.memory.get_recent_history("energy", k=1)[0]
         pre_money = self.memory.get_recent_history("money", k=1)[0]
         pre_health = self.memory.get_recent_history("health", k=1)[0]

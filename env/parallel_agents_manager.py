@@ -13,12 +13,48 @@ from eval_agent import run_stardojo_isolated
 # Each task is a dictionary specifying its 'name' and 'id'.
 TASKS_TO_RUN: List[Dict[str, Any]] = [
     {"name": "farming_lite", "id": 0},
-    # {"name": "farming_lite", "id": 1},
-    # {"name": "meet_villagers", "id": 1},
-    # {"name": "catch_a_fish", "id": 0},
-    # {"name": "plant_parsnips", "id": 2},
+    # {"name": "exploration_lite", "id": 2},
     # Add more tasks as needed
 ]
+
+TASKS_COUNT = {
+    "farming_lite": 21,
+    "exploration_lite": 28,
+    "combat_lite": 12,
+    "crafting_lite": 14,
+    "social_lite": 25,
+}
+
+MINI_TASKS = [
+    {"name": "farming_lite", "id": 0},
+    {"name": "farming_lite", "id": 1},
+    {"name": "farming_lite", "id": 3},
+    {"name": "farming_lite", "id": 6},
+    {"name": "crafting_lite", "id": 1},
+    {"name": "crafting_lite", "id": 5},
+    {"name": "crafting_lite", "id": 10},
+    {"name": "exploration_lite", "id": 0},
+    {"name": "exploration_lite", "id": 7},
+    {"name": "exploration_lite", "id": 13},
+    {"name": "social_lite", "id": 9},
+    {"name": "social_lite", "id": 10},
+]
+
+def get_tasks_list(task_name: str) -> List[Dict[str, Any]]:
+    tasks_list = []
+    for i in range(TASKS_COUNT[task_name]):
+        tasks_list.append({"name": task_name, "id": i})
+    return tasks_list
+
+def get_all_tasks_list() -> List[Dict[str, Any]]:
+    tasks_list = []
+    for task_name in TASKS_COUNT.keys():
+        tasks_list.extend(get_tasks_list(task_name))
+    return tasks_list
+
+def get_all_tasks_group(group_count: int) -> List[List[Dict[str, Any]]]:
+    all_tasks_list = get_all_tasks_list()
+    return [all_tasks_list[i:i+group_count] for i in range(0, len(all_tasks_list), group_count)]
 
 # 2. Set the starting port and save index. 
 # Each process will get an incremented value to ensure they are isolated.
@@ -38,7 +74,7 @@ NEEDS_SHARED_MEMORY = False
 # --- End of Configuration ---
 
 
-def main():
+def main(tasks_to_run: List[Dict[str, Any]]):
     """
     Main function to orchestrate the creation and management of parallel processes.
     """
@@ -49,9 +85,14 @@ def main():
     os.makedirs(BASE_IMAGE_SAVE_PATH, exist_ok=True)
 
     processes = []
+
+    # tasks_to_run = MINI_TASKS[:6]
+    # all_tasks_grouped = get_all_tasks_group(8)
+    # print(len(all_tasks_grouped))
+    # tasks_to_run = all_tasks_grouped[0]
     
     # Loop through the configured tasks and set up a process for each one
-    for i, task_info in enumerate(TASKS_TO_RUN):
+    for i, task_info in enumerate(tasks_to_run):
         task_name = task_info["name"]
         task_id = task_info["id"]
 
@@ -123,4 +164,17 @@ def main():
 if __name__ == "__main__":
     # The `if __name__ == "__main__":` block is essential for multiprocessing.
     # It ensures that child processes do not re-execute the process creation code.
-    main()
+    # mini_tasks = MINI_TASKS
+    # first_half = mini_tasks[:len(mini_tasks)//2]
+    # second_half = mini_tasks[len(mini_tasks)//2:]
+    # print(len(first_half))
+    # print(len(second_half))
+    tasks_remain = MINI_TASKS
+    first_half = tasks_remain[:len(tasks_remain)//2]
+    second_half = tasks_remain[len(tasks_remain)//2:]
+    print(len(first_half))
+    print(len(second_half))
+    main(first_half)
+    main(second_half)
+    # main(first_half)
+    # main(second_half)

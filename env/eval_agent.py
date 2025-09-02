@@ -266,13 +266,15 @@ class StarDojoLLMIsolated(StarDojo):
         logging.log(logging.INFO, f"Starting to step.")
         obs = self._get_processed_obs()
         image_path = obs["image_paths"][-1]
-        logging.log(logging.INFO, f"Image path: {image_path}")
+        from my_logger import stardojo_log
+        stardojo_log.info(f"Image path: {image_path}")
         if self.needs_pausing:
             logging.log(logging.INFO, f"Starting to plan, the game is paused.")
             self.action_proxy.pause_game()
         try:
             skill_steps = self.agent.run_planning(obs, image_obs=self.image_obs, step_num = self.step_num)
             logging.log(logging.INFO, f"Planning finished, skill_steps: {skill_steps}")
+            stardojo_log.info(f"Planning finished, skill_steps: {skill_steps}")
         except Exception as e:
             logging.log(logging.ERROR, f"Error in planning: {e}")
             if self.needs_pausing:
@@ -320,7 +322,7 @@ def run_stardojo_isolated(
     log_path: str,
     checkpoint_interval: int = 100,
     env_config_path: str = "./conf/env_config_stardew.json",
-    llm_config_path: str = "./conf/opensrc_config.json",
+    llm_config_path: str = "./conf/opensrc_config_local.json",
     embed_config_path: str = "./conf/openai_config.json",
     needs_shared_memory: bool = False,
     max_image_storage: int = 2,
@@ -333,9 +335,11 @@ def run_stardojo_isolated(
         datefmt='%Y-%m-%d %H:%M:%S',
         level=logging.INFO
     )
+    from my_logger import stardojo_log
 
     task = load_task.load_task(task_name, task_id)
-    
+    stardojo_log.info(f"Task: {task_name}_{task_id}")
+
     if task.difficulty == "easy":
         max_turn_count = 30
     elif task.difficulty == "medium":
@@ -379,15 +383,18 @@ def run_stardojo_isolated(
 
             if step > max_turn_count:
                 print('Max steps reached, exiting.')
+                stardojo_log.info(f"Max steps reached, exiting.")
                 break
 
             if terminated:
                 stardojo_env.action_proxy.exit_to_title()
                 print('Task completed, exiting.')
+                stardojo_log.info(f"Task completed, exiting.")
                 break
 
         except KeyboardInterrupt:
             print('Interrupted by user.')
+            stardojo_log.info(f"Interrupted by user.")
             react_agent.pipeline_shutdown()
             stardojo_env.exit()
             break

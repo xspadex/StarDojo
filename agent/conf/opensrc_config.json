@@ -1,7 +1,7 @@
 {
     "key_var": "OPEN_SRC_KEY",
     "emb_model": "text-embedding-ada-002",
-    "comp_model": "meta-llama/llama-4-maverick:free",
+    "comp_model": "google/gemini-flash-1.5-8b",
     "base_url": "https://openrouter.ai/api/v1",
     "is_azure": false
 }
