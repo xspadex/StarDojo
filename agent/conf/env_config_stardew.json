@@ -52,7 +52,7 @@
                 "information_toolbar_gathering": "./res/stardew/prompts/inputs/information_toolbar_gathering.json"
             },
             "templates": {
-                "action_planning": "./res/stardew/prompts/templates/action_planning_image_only.prompt",
+                "action_planning": "./res/stardew/prompts/templates/action_planning_image_only_free_reasoning.prompt",
                 "information_gathering": "./res/stardew/prompts/templates/information_gathering_cultivation.prompt",
                 "success_detection": "./res/stardew/prompts/templates/success_detection.prompt",
                 "self_reflection": "./res/stardew/prompts/templates/self_reflection_cultivation.prompt",

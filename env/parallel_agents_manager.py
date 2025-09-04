@@ -169,12 +169,16 @@ if __name__ == "__main__":
     # second_half = mini_tasks[len(mini_tasks)//2:]
     # print(len(first_half))
     # print(len(second_half))
-    tasks_remain = MINI_TASKS
-    first_half = tasks_remain[:len(tasks_remain)//2]
-    second_half = tasks_remain[len(tasks_remain)//2:]
-    print(len(first_half))
-    print(len(second_half))
-    main(first_half)
-    main(second_half)
+    # tasks_remain = MINI_TASKS
+    # first_half = tasks_remain[:len(tasks_remain)//2]
+    # second_half = tasks_remain[len(tasks_remain)//2:]
+    # print(len(first_half))
+    # print(len(second_half))
     # main(first_half)
     # main(second_half)
+    # main(first_half)
+    # main(second_half)
+    task0 = [
+       {"name": "farming_lite", "id": 0},
+    ]
+    main(task0)
