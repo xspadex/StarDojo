@@ -9,9 +9,11 @@ from stardojo.log import Logger
 from stardojo.planner.base import BasePlanner
 from stardojo.utils.check import check_planner_params
 from stardojo.utils.file_utils import assemble_project_path, read_resource_file
-from stardojo.utils.json_utils import load_json, parse_semi_formatted_text, JsonFrameStructure
+from stardojo.utils.json_utils import load_json, parse_semi_formatted_text, parse_r1_style_text, JsonFrameStructure
 from stardojo.utils.template_matching import match_templates_images, selection_box_identifier
 from stardojo import constants
+from stardojo.r1.prompt import USER_PROMPT_WITH_REASONING_FORMAT
+from stardojo.utils.encoding_utils import encode_data_to_base64_path
 
 config = Config()
 logger = Logger()
@@ -617,7 +619,7 @@ class ActionPlanning():
         return input
 
 
-    def __call__(self, *args, input: Dict[str, Any] = None, **kwargs) -> Dict[str, Any]:
+    def __call__(self, *args, input: Dict[str, Any] = None, r1_prompt: bool = True, **kwargs) -> Dict[str, Any]:
 
         input = self.input_map if input is None else input
         input = self._pre(input=input)
@@ -627,7 +629,31 @@ class ActionPlanning():
 
         try:
             message_prompts = self.llm_provider.assemble_prompt(template_str=self.template, params=input)
-
+            if r1_prompt:
+                task = input["task_description"]
+                task = " ".join([word.capitalize() if word not in ["the", "and", "or", "a", "an", "at", "in", "on", "to", "from", "with", "without", "by", "for", "of", "at", "in", "on", "to", "from", "with", "without", "by", "for", "of", "at", "in", "on", "to", "from", "with", "without", "by", "for", "of", "at", "in", "on", "to", "from", "with", "without", "by", "for", "of"] else word for word in task.split("_")])
+                image_path = input["image"][-1]
+                if image_path.startswith("../../env"):
+                    image_path = image_path.replace("../../", "../")
+                encoded_image = encode_data_to_base64_path(image_path)[-1]
+                user_prompt = USER_PROMPT_WITH_REASONING_FORMAT.replace("{task}", task)
+                message_prompts = [
+                    {
+                        "role": "user",
+                        "content": [
+                            {
+                                "type": "text",
+                                "text": user_prompt
+                            },
+                            {
+                                "type": "image_url",
+                                "image_url": {
+                                    "url": f"{encoded_image}"
+                                }
+                            }
+                        ]
+                    }
+                ]
             logger.debug(f'{logger.UPSTREAM_MASK}{json.dumps(message_prompts, ensure_ascii=False)}\n')
 
             # Call the LLM provider for decision making
@@ -640,7 +666,10 @@ class ActionPlanning():
                 logger.debug(input)
 
             # Convert the response to dict
-            processed_response = parse_semi_formatted_text(response)
+            if r1_prompt:
+                processed_response = parse_r1_style_text(response)
+            else:
+                processed_response = parse_semi_formatted_text(response)
 
         except Exception as e:
             logger.error(f"Error in decision_making: {e}")
@@ -958,12 +987,12 @@ class StardewPlanner(BasePlanner):
         return data
 
 
-    def action_planning(self, *args, input: Dict[str, Any] = None, **kwargs) -> Dict[str, Any]:
+    def action_planning(self, *args, input: Dict[str, Any] = None, r1_prompt: bool = True, **kwargs) -> Dict[str, Any]:
 
         if input is None:
             input = self.inputs["action_planning"]
 
-        data = self.action_planning_(input=input)
+        data = self.action_planning_(input=input, r1_prompt=r1_prompt)
 
         return data
 

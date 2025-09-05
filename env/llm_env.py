@@ -262,13 +262,13 @@ class StarDojoLLM(StarDojo):
         obs['action'] = self.last_action
         return self._process_obs(obs)
 
-    def step(self, autoAction=None):
+    def step(self, autoAction=None, r1_prompt=True):
         obs = self._get_processed_obs()
         if self.needs_pausing:
             logging.log(logging.INFO, f"Starting to plan, the game is paused.")
             self.action_proxy.pause_game()
         try:
-            skill_steps = self.agent.run_planning(obs, image_obs=self.image_obs, step_num = self.step_num)
+            skill_steps = self.agent.run_planning(obs, image_obs=self.image_obs, step_num = self.step_num, r1_prompt=r1_prompt)
         except Exception as e:
             logging.log(logging.ERROR, f"Error in planning: {e}")
             if self.needs_pausing:
@@ -405,19 +405,19 @@ if __name__ == "__main__":
     parser.add_argument("--image_save_path", type=str, default="../env/screen_shot_buffer", help="Directory to save screenshots")
     parser.add_argument("--output_video", action="store_true", help="Whether to record output video")
     parser.add_argument("--task_name", type=str, default="farming_lite", help="Name of the task to load")
-    parser.add_argument("--task_id", type=int, default=12, help="ID of the task to load")
+    parser.add_argument("--task_id", type=int, default=0, help="ID of the task to load")
     parser.add_argument("--checkpoint_interval", type=int, default=5, help="Interval of saving checkpoints")
     parser.add_argument("--env_config_path", type=str, default="./conf/env_config_stardew.json", help="Path to environment config")
-    parser.add_argument("--llm_config_path", type=str, default="./conf/opensrc_config.json", help="Path to LLM config")
+    parser.add_argument("--llm_config_path", type=str, default="./conf/opensrc_config_local.json", help="Path to LLM config")
     parser.add_argument("--embed_config_path", type=str, default="./conf/openai_config.json", help="Path to embedding config")
     parser.add_argument("--needs_shared_memory", default=False, help="Whether to use shared memory")
-    parser.add_argument("--max_image_storage", type=int, default=2, help="Maximum number of images to store")
+    parser.add_argument("--max_image_storage", type=int, default=1, help="Maximum number of images to store")
     args = parser.parse_args()
 
     run_stardojo( 
         port=args.port,
         save_index=args.save_index,
-        new_game=True,
+        new_game=False,
         image_save_path=args.image_save_path,
         output_video=args.output_video,
         task_name=args.task_name,

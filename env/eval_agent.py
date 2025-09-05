@@ -262,7 +262,7 @@ class StarDojoLLMIsolated(StarDojo):
         obs['action'] = self.last_action
         return self._process_obs(obs)
 
-    def step(self, autoAction=None):
+    def step(self, autoAction=None, r1_prompt=True):
         logging.log(logging.INFO, f"Starting to step.")
         obs = self._get_processed_obs()
         image_path = obs["image_paths"][-1]
@@ -272,7 +272,7 @@ class StarDojoLLMIsolated(StarDojo):
             logging.log(logging.INFO, f"Starting to plan, the game is paused.")
             self.action_proxy.pause_game()
         try:
-            skill_steps = self.agent.run_planning(obs, image_obs=self.image_obs, step_num = self.step_num)
+            skill_steps = self.agent.run_planning(obs, image_obs=self.image_obs, step_num = self.step_num, r1_prompt=r1_prompt)
             logging.log(logging.INFO, f"Planning finished, skill_steps: {skill_steps}")
             stardojo_log.info(f"Planning finished, skill_steps: {skill_steps}")
         except Exception as e:
@@ -325,7 +325,7 @@ def run_stardojo_isolated(
     llm_config_path: str = "./conf/opensrc_config_local.json",
     embed_config_path: str = "./conf/openai_config.json",
     needs_shared_memory: bool = False,
-    max_image_storage: int = 2,
+    max_image_storage: int = 1,
 ):
 
     logging.basicConfig(

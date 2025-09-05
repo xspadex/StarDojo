@@ -322,7 +322,7 @@ class PipelineRunner():
 
         del params
 
-    def run_planning(self, obs, step_num, image_obs=True):
+    def run_planning(self, obs, step_num, image_obs=True, r1_prompt=True):
         '''
         add text_observation's memory segmentation
         '''
@@ -379,7 +379,7 @@ class PipelineRunner():
 
         # 2. Call llm api for action planning
         params = deepcopy(self.memory.working_area)
-        data = self.planner.action_planning(input=params)
+        data = self.planner.action_planning(input=params, r1_prompt=r1_prompt)
         response = data['res_dict']
         del params
 
@@ -711,7 +711,7 @@ class PipelineRunnerIsolated():
 
         del params
 
-    def run_planning(self, obs, step_num, image_obs=True):
+    def run_planning(self, obs, step_num, image_obs=True, r1_prompt=True):
         '''
         add text_observation's memory segmentation
         '''
@@ -761,7 +761,7 @@ class PipelineRunnerIsolated():
 
         # 2. Call llm api for action planning
         params = deepcopy(self.memory.working_area)
-        data = self.planner.action_planning(input=params)
+        data = self.planner.action_planning(input=params, r1_prompt=r1_prompt)
         response = data['res_dict']
         del params
 

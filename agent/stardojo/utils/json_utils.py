@@ -117,6 +117,27 @@ def _is_line_key_candidate(line: str) -> Tuple[bool, Optional[str]]:
     return result, likely_key
 
 
+def parse_r1_style_text(text):
+    success = False
+    reasoning = text
+    answer = text
+    golden_pattern = r"<think>.*?</think>\s*<answer>\s*(?:unattach_item\(\)|craft\(item\s*=\s*\".*?\"\)|interact\(direction\s*=\s*(?:up|right|down|left)\)|use\(direction\s*=\s*(?:up|right|down|left)\)|navigate\(name\s*=\s*\".*?\"\)|choose_item\(slot_index\s*=\s*\d+\)|attach_item\(slot_index\s*=\s*\d+\)|move\(x\s*=\s*-?\d+,\s*y\s*=\s*-?\d+\)|menu\(option\s*=\s*\"(?:open|close)\",\s*menu_name\s*=\s*\".*?\"\)|choose_option\(option_index\s*=\s*\d+(?:,\s*quantity\s*=\s*\d+)?(?:,\s*direction\s*=\s*\"(?:in|out)\")?\))\s*</answer>"
+    match = re.search(golden_pattern, text, re.DOTALL)
+    if match:
+        success = True
+        reasoning_answer_pattern = r'<think>(.*?)</think>\s*<answer>(.*?)</answer>'
+        match = re.search(reasoning_answer_pattern, text, re.DOTALL)
+        if match:
+            success = True
+            reasoning = match.group(1).strip()
+            answer = match.group(2).strip()
+        
+    return {
+        "success": success,
+        "reasoning": reasoning,
+        "actions": [answer]
+    }
+
 ### Parses the semi-formatted text from model response
 def parse_semi_formatted_text(text):
 
