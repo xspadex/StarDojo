@@ -75,7 +75,7 @@ purchase_joja_membership:
   quantity: 1
   tool: null
   save: save_new
-  init_commands: ['warp("joja", 21, 26)']
+  init_commands: ['warp("JojaMart", 21, 26)']
   evaluator: jojamart
   difficulty: easy
 

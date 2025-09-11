@@ -225,3 +225,5 @@ env/logs/evaluations.npz
 **/screen_shot_buffer/
 **/parallel_images/
 **/backup_logs/
+
+screen_shot_buffer*/

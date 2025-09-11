@@ -16,7 +16,7 @@ from llm_env import StarDojoLLM
 from tasks.farming import Farming
 # --- 配置區 ---
 
-SKIP_COUNT = 24
+SKIP_COUNT = 0
 
 # 1. 定義輸出數據的根資料夾
 OUTPUT_DIR = "/Users/xspadex/iclr/traj_data/replayed/"
@@ -255,6 +255,8 @@ class ActionReplayer:
             logging.critical(f"輸入檔案未找到: {input_jsonl_path}")
         except json.JSONDecodeError as e:
             logging.critical(f"解碼 JSON 時出錯: {e}")
+        except Exception as e:
+            logging.critical(f"在處理檔案時出錯: {e}")
         
         logging.info("檔案中的所有任務都已處理完畢。")
 
@@ -267,12 +269,12 @@ if __name__ == "__main__":
     args = parser.parse_args()
 
 
-    input_paths = [
-        "/Users/xspadex/iclr/traj_data/extracted_actions/all_short.jsonl",
-    ]
     # input_paths = [
-    #     "/Users/xspadex/iclr/traj_data/full_success_traj_actions/craft_only.jsonl",
+    #     "/Users/xspadex/iclr/traj_data/extracted_actions/all_short.jsonl",
     # ]
+    input_paths = [
+        "/Users/xspadex/iclr/traj_data/full_success_traj_actions/manual_actions.jsonl",
+    ]
     for input_file in input_paths:
         replayer = ActionReplayer(
             port=args.port, 

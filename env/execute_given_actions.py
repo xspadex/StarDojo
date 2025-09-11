@@ -578,13 +578,54 @@ def find_and_kill_process_by_port(ports):
             print(f"No process is using port {port} or an error occurred: {e}")
 
 
+def _parse_action(action_string: str) -> Tuple[str, List[Any], Dict[str, Any]]:
+    """
+    解析動作字串，支援位置參數和關鍵字參數。
+    例如:
+    - 'move(x=1, y=-1)' -> ('move', [], {'x': 1, 'y': -1})
+    - 'interact("down")' -> ('interact', ['down'], {})
+    - 'tool()' -> ('tool', [], {})
+    """
+    match = re.match(r"(\w+)\((.*)\)", action_string)
+    if not match:
+        raise ValueError(f"無法解析動作字串: {action_string}")
+
+    name, args_str = match.groups()
+    args_str = args_str.strip()
+        
+    args = []
+    kwargs = {}
+
+    if not args_str:
+        # 處理沒有參數的情況, e.g., tool()
+        return name, args, kwargs
+
+    # 使用 eval 的一個安全技巧來解析參數
+    # 我們定義一個假的函數 `_capture` 來捕獲傳入的 *args 和 **kwargs
+    def _capture(*pargs, **pkwargs):
+        return pargs, pkwargs
+
+    try:
+        # 在一個受限的環境中執行 eval，只允許調用 _capture
+        # 這會將 action_string 中的參數傳遞給 _capture
+        captured_args, captured_kwargs = eval(
+            f"_capture({args_str})", 
+            {"__builtins__": None}, 
+            {"_capture": _capture}
+        )
+        args = list(captured_args)
+        kwargs = captured_kwargs
+    except Exception as e:
+        logging.error(f"使用 eval 解析參數 '{args_str}' 失敗: {e}")
+        # 作為備用方案，可以添加更簡單的基於正則的解析，但 eval 的方法更通用
+        raise ValueError(f"無法解析參數: {args_str}")
+
+    return name, args, kwargs
+
 if __name__ == "__main__":
     '''
     test code
     '''
-
-    # ports_to_clear = range(10783, 10784)
-    # find_and_kill_process_by_port(ports_to_clear)
 
     env_params = {
         'port': 10783,
@@ -594,128 +635,309 @@ if __name__ == "__main__":
     }
     env = StarDojo(**env_params)
 
-
-    # for i in range(10):
-    #     env.action_proxy.resume_game()
-    #     env.action_proxy.move(80,16)
-    #     env.action_proxy.pause_game()
-    # env.action_proxy.resume_game()
-
-    # env.action_proxy.choose_option(0,2)
-    # env.action_proxy.resume_game()
-
-    # for i in range(5000):
-    #     env.action_proxy.choose_item(3)
-    #     env.action_proxy.use()
-    #     env.action_proxy.interact()
-        # env.action_proxy.choose_option(0,0)
-
-    # env.action_proxy.move(10,9)
-    # print(res)
-    # obs = env.reset()
-    # before = time.time()
-    # print(f"Time: {after - before}")
-    # before = time.time()
-    # time.sleep(2)
-    # env.action_proxy.interact()
-    #
-    # for i in range(5):
-    #     env.action_proxy.turn(1)
-    #     env.action_proxy.use()
-    #     env.action_proxy.move_step(2)
-    #     env.action_proxy.choose_item(3)
-    #     env.action_proxy.turn(3)
-    #     env.action_proxy.choose_option(0,0)
-    #     env.action_proxy.use()
-    #     env.action_proxy.move_step(1)
-    # env.action_proxy.interact()
-    # env.action_proxy.resume_game()
-
-    # obs = env._get_obs()
-    # env.action_proxy.move(-1,22)
-    # env.action_proxy.move(0,0)
-    # env.action_proxy.interact()
-    # env.action_proxy.resume_game()
-    # env.action_proxy.choose_option(0,0)
-    # env.action_proxy.move(4,17)
-    # env.action_proxy.interact()
-    # env.action_proxy.resume_game()
     from env.tasks.utils.init_task import InitTaskProxy
     from env.tasks.farming import Farming
-    # env.action_proxy.navigate("FarmHouse")
-    # InitTaskProxy(10783).warp_shop("gus")
-    # InitTaskProxy(10783).warp_mine("5")
+    from env.tasks.crafting import Crafting
+    from env.tasks.utils import load_task
+    task_proxy = InitTaskProxy(10783)
     
-    # env.action_proxy.warp("HarveyRoom", 5, 5)
-    # env.action_proxy.warp("AnimalShop", 12, 16)
-    # env.action_proxy.warp("SebastianRoom", 8, 8)
-    # env.action_proxy.warp("Farm", 10, 10)
-    # env.action_proxy.warp("BusStop", 10, 25)
-    # env.action_proxy.exit_to_title()
-    # task_for_launch = Farming("sadasd", "", 0, "", "save_new", [], "", "")
-    # env.task_proxy = InitTaskProxy(10783)
-    # task_for_launch.init_task(env.task_proxy)
-    # print(obs)
-    # env.action_proxy.craft("wood fnce")
-    # env.action_proxy.resume_game()
-    # env.action_proxy.warp("JojaMart", 10, 10)
-    env.action_proxy.interact(direction="up")
-    # env.action_proxy.move(0, 1)
-    print("debug")
-    # after = time.time()
-    # print(f"Time: {after - before}")
-    # before = time.time()
-    # obs = env.action_proxy.use()
-    # after = time.time()
-    # print(f"Time: {after - before}")
-    # with open('output.json', 'w') as f:
-    #      json.dump(obs["Farm"]["Buildings"], f)
-    # print(obs)dw
-    # sum = 0
-
-    # for i in range(20):
-    #     before = time.time()
-    #     # obs = env.action_proxy.observe()
-    #     env._get_obs()
-    #     # env.action_proxy.choose_item(0)
-    #     # print(f"time_point_99: {time.thread_time()}")
-    #
-    #     # env._get_obs()
-    # # env.action_proxy.use()
-    #     after = time.time()
-    #     print(f"Time: {after - before}")
-    #     sum+=after-before
-    # print(f"Average Time: {sum/20}")
-        # print(obs["Player"]["Position"])
-    # env.action_proxy.move(34,5)
-    # env.action_proxy.use()
-    # env.action_proxy.move_step(3)
-    # env.action_proxy.choose_item(4)
-    # env.action_proxy.choose_option(0,0,0,0)
-    # env.action_proxy.use()
-    # env.action_proxy.resume_game()
-    # env.action_proxy.choose_option(0,0,0,0)
-    # env.action_proxy.pause_game()
-    # success = env.action_proxy._post_message("get_monster_kills%Slime")
-    # print(success)
-    # print(obs)
-    # obs = env.reset()
-
-    # print("Welcome to the game! Type 'help' for commands, 'stop' to exit.")
-    # Input = ""
-    # while Input != "stop":
-    #     # continuously input
-    #
-    #     # get Input instructions
-    #
-    #     Input = input("\nYour Next Action:\n")
-    #     input_array = Input.split()  # split by space
-    #     # convert into int array
-    #     actions_array = [int(i) for i in input_array]
-    #     print(f"Action0: {actions_array}")
-    #     if not env.action_space.contains(actions_array):
-    #         print("Invalid action")
-    #         continue
-    #     print(f"Action: {actions_array}")
-    #     obs, reward, terminated, truncated, info = env.step(actions_array)
-    #     print(info)
+    all_actions = {
+        "Craft 1 Wood Fence": {
+            "task_type": "crafting_lite",
+            "task_id": 1,
+            "actions": [
+                'move(x=2, y=6)',
+                'use(direction="right")',
+                'move(x=2, y=1)',
+                'use(direction="down")',
+                'move(x=1, y=1)',
+                'use(direction="right")',
+                'use(direction="right")',
+                'use(direction="right")',
+                'use(direction="right")',
+                'use(direction="right")',
+                'use(direction="right")',
+                'use(direction="right")',
+                'use(direction="right")',
+                'use(direction="right")',
+                'use(direction="right")',
+                'use(direction="right")',
+                'use(direction="right")',
+                'use(direction="right")',
+                'use(direction="right")',
+                'use(direction="right")',
+                'move(x=1, y=0)',
+                'use(direction="right")',
+                'move(x=3, y=0)',
+                'craft(item="Wood Fence")'
+            ]
+        },
+        "Forage 10 Hay with Scythe": {
+            "task_type": "exploration_lite",
+            "task_id": 17,
+            "actions": [
+                'choose_item(slot_index=4)',
+                'move(x=2, y=6)',
+                'use(direction="down")',
+                'move(x=0, y=1)',
+                'use(direction="down")',
+                'move(x=0, y=1)',
+                'use(direction="down")',
+                'move(x=0, y=1)',
+                'use(direction="down")',
+                'move(x=0, y=1)',
+                'use(direction="down")',
+                'use(direction="left")',
+                'move(x=-2, y=-2)',
+                'use(direction="left")',
+                'move(x=-1, y=0)',
+                'choose_item(slot_index=0)',
+                'use(direction="left")',
+                'use(direction="left")',
+                'use(direction="left")',
+                'use(direction="left")',
+                'use(direction="left")',
+                'move(x=-2, y=0)',
+                'choose_item(slot_index=4)',
+                'use(direction="left")',
+                'move(x=-1, y=0)',
+                'use(direction="left")',
+                'move(x=-1, y=0)',
+                'use(direction="left")',
+            ]
+        },
+        "Water 5 Crop with Watering Can": {
+            "task_type": "farming_lite",
+            "task_id": 8,
+            "actions": [
+                'choose_item(slot_index=2)',
+                'move(x=0, y=2)',
+                'use(direction="down")',
+                'move(x=0, y=1)',
+                'use(direction="down")',
+                'use(direction="left")',
+                'use(direction="right")',
+                'move(x=1, y=0)',
+                'use(direction="down")',
+            ]
+        },
+        "Purchase Joja Membership": {
+            "task_type": "social_lite",
+            "task_id": 7,
+            "actions": [
+                'interact(direction="up")',
+                'choose_option(option_index=1)',
+                'choose_option(option_index=1)',
+                'choose_option(option_index=1)',
+                'choose_option(option_index=1)',
+                'choose_option(option_index=1)',
+                'choose_option(option_index=1)',
+                'interact(direction="up")',
+                'choose_option(option_index=1)',
+                'choose_option(option_index=1)',
+                'choose_option(option_index=1)',
+                'choose_option(option_index=1)',
+                'choose_option(option_index=1)',
+                'choose_option(option_index=1)',
+                'choose_option(option_index=1)',
+                'choose_option(option_index=1)',
+                'choose_option(option_index=1)',
+                'choose_option(option_index=1)',
+            ]
+        },
+        "Go to Bed": {
+            "task_type": "exploration_lite",
+            "task_id": 0,
+            "actions": [
+                'interact(direction="up")',
+                'move(x=7, y=-2)',
+                'choose_option(option_index=1)',
+            ]
+        },
+        "Go to Coop": {
+            "task_type": "exploration_lite",
+            "task_id": 1,
+            "actions": [
+                'move(x=-10, y=0)',
+                'interact(direction="up")',
+            ]
+        },
+        "Fill 1 Pet Bowl with Watering Can": {
+            "task_type": "farming_lite",
+            "task_id": 14,
+            "actions": [
+                'choose_item(slot_index=2)',
+                'move(x=-12, y=-8)',
+                'move(x=1, y=0)',
+                'use(direction="right")',
+            ]
+        },
+        "Harvest 1 Egg": {
+            "task_type": "farming_lite",
+            "task_id": 16,
+            "actions": [
+                'move(x=-17, y=-1)',
+                'interact(direction="up")',
+                'move(x=6, y=-3)',
+                'interact(direction="up")',
+            ]
+        },
+        "Go to Bus Stop": {
+            "task_type": "exploration_lite",
+            "task_id": 2,
+            "actions": [
+                'move(x=16, y=2)',
+            ]
+        },
+        "Clear 10 Weeds with Scythe": {
+            "task_type": "farming_lite",
+            "task_id": 0,
+            "actions": [
+                'choose_item(slot_index=4)',
+                'move(x=2, y=6)',
+                'use(direction="down")',
+                'move(x=0, y=1)',
+                'use(direction="down")',
+                'move(x=0, y=1)',
+                'use(direction="down")',
+            ]
+        },
+        "Clear 5 Stone with Pickaxe": {
+            "task_type": "farming_lite",
+            "task_id": 1,
+            "actions": [
+                'choose_item(slot_index=3)',
+                'move(x=0, y=4)',
+                'use(direction="down")',
+                'move(x=-1, y=0)',
+                'use(direction="left")',
+                'move(x=-3, y=0)',
+                'use(direction="left")',
+                'move(x=-1, y=1)',
+                'use(direction="down")',
+                'choose_option(option_index=0)',
+                'use(direction="left")',
+                'move(x=2, y=3)',
+                'use(direction="up")',
+            ]
+        },
+        "Till 5 Tile with Hoe": {
+            "task_type": "farming_lite",
+            "task_id": 3,
+            "actions": [
+                'choose_item(slot_index=1)',
+                'move(x=0, y=2)',
+                'use(direction="down")',
+                'move(x=0, y=1)',
+                'use(direction="down")',
+                'use(direction="left")',
+                'use(direction="right")',
+                'move(x=0, y=1)',
+                'use(direction="right")',
+            ]
+        },
+        "Sow 5 Dirt with Cauliflower Seeds": {
+            "task_type": "farming_lite",
+            "task_id": 6,
+            "actions": [
+                'choose_item(slot_index=5)',
+                'move(x=0, y=4)',
+                'interact(direction="down")',
+                'move(x=1, y=0)',
+                'interact(direction="down")',
+                'interact(direction="right")',
+                'move(x=1, y=0)',
+                'interact(direction="down")',
+                'interact(direction="right")'
+            ]
+        },
+        "Harvest 5 Parsnip": {
+            "task_type": "farming_lite",
+            "task_id": 9,
+            "actions": [
+                'move(x=0, y=2)',
+                'interact(direction="down")',
+                'move(x=0, y=1)',
+                'interact(direction="down")',
+                'interact(direction="left")',
+                'interact(direction="right")',
+                'move(x=1, y=0)',
+                'interact(direction="down")',
+            ]
+        },
+        "Craft 1 Torch": {
+            "task_type": "crafting_lite",
+            "task_id": 6,
+            "actions": [
+                'move(x=2, y=6)',
+                'use(direction="right")',
+                'craft(item="Torch")',
+                'move(x=2, y=1)',
+                'use(direction="down")',
+                'move(x=1, y=1)',
+                'use(direction="right")',
+                'use(direction="right")',
+                'use(direction="right")',
+                'use(direction="right")',
+                'use(direction="right")',
+                'use(direction="right")',
+                'use(direction="right")',
+                'use(direction="right")',
+                'use(direction="right")',
+                'use(direction="right")',
+                'use(direction="right")',
+                'use(direction="right")',
+                'use(direction="right")',
+                'use(direction="right")',
+                'use(direction="right")',
+                'move(x=1, y=0)',
+                'use(direction="right")',
+                'move(x=3, y=0)',
+                'craft(item="Torch")'
+            ]
+        },
+        "Produce 1 Copper Bar with Furnace": {
+            "task_type": "crafting_lite",
+            "task_id": 10,
+            "actions": [
+                'choose_item(slot_index=6)',
+                'move(x=0, y=2)',
+                'use(direction="down")',
+                'choose_item(slot_index=7)',
+                'interact(direction="down")',
+            ]
+        },
+        "Purchase 5 Beer": {
+            "task_type": "social_lite",
+            "task_id": 1,
+            "actions": [
+                'interact(direction="up")',
+                'choose_option(option_index=1, quantity=5, direction="in")',
+            ]
+        },
+        "Upgrade to Large Pack": {
+            "task_type": "social_lite",
+            "task_id": 9,
+            "actions": [
+                'move(x=3, y=0)',
+                'interact(direction="up")',
+                'choose_option(option_index=1)',
+                
+            ]
+        }
+    }
+    
+    CURRENT_TASK = "Upgrade to Large Pack"
+    task_type = all_actions[CURRENT_TASK]["task_type"]
+    task_id = all_actions[CURRENT_TASK]["task_id"]
+    task = load_task.load_task(task_type, task_id)
+    task.init_task(task_proxy)
+    time.sleep(1.5)
+    
+    actions = all_actions[CURRENT_TASK]["actions"]
+    env.action_proxy.choose_option(option_index=0, quantity=0)
+    for action in actions:
+        action_name, args, kwargs = _parse_action(action)
+        action_func = getattr(env.action_proxy, action_name)
+        action_func(*args, **kwargs) # Use *args and **kwargs to call the function
+        time.sleep(1)

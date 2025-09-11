@@ -19,12 +19,9 @@
             "use",
             "interact",
             "choose_item",
-            "attach_item",
-            "unattach_item",
             "craft",
             "choose_option",
-            "menu",
-            "navigate"
+            "menu"
         ],
         "skill_names_movement": [],
         "skill_names_map": [],

@@ -220,26 +220,26 @@ def choose_option(option_index, quantity=None, direction=None):
 
 
 
-@register_skill("attach_item")
-def attach_item(slot_index):
-    """
-    Attach the item to the slot. Call template: attach_item(slot_index = ...)
-    For example:
-        - call attach_item(0) to attach the item in the first slot to the current tool
+# @register_skill("attach_item")
+# def attach_item(slot_index):
+#     """
+#     Attach the item to the slot. Call template: attach_item(slot_index = ...)
+#     For example:
+#         - call attach_item(0) to attach the item in the first slot to the current tool
 
-    Parameters:
-     - slot_index: The index of the inventory slot (0-35). This is an integer
-    """
-    actionproxy.attach_item(slot_index=slot_index)
+#     Parameters:
+#      - slot_index: The index of the inventory slot (0-35). This is an integer
+#     """
+#     actionproxy.attach_item(slot_index=slot_index)
 
 
 
-@register_skill("unattach_item")
-def unattach_item():
-    """
-    Unattach the item from the current tool. Call template: unattach_item()
-    """
-    actionproxy.unattach_item()
+# @register_skill("unattach_item")
+# def unattach_item():
+#     """
+#     Unattach the item from the current tool. Call template: unattach_item()
+#     """
+#     actionproxy.unattach_item()
 
 
 @register_skill("menu")
@@ -283,8 +283,8 @@ __all__ = [
     "choose_item",
     "interact",
     "choose_option",
-    "attach_item",
-    "unattach_item",
+    # "attach_item",
+    # "unattach_item",
     "menu",
     #"navigate"
 ]

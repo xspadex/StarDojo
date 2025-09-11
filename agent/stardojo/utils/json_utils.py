@@ -121,7 +121,7 @@ def parse_r1_style_text(text):
     success = False
     reasoning = text
     answer = text
-    golden_pattern = r"<think>.*?</think>\s*<answer>\s*(?:unattach_item\(\)|craft\(item\s*=\s*\".*?\"\)|interact\(direction\s*=\s*(?:up|right|down|left)\)|use\(direction\s*=\s*(?:up|right|down|left)\)|navigate\(name\s*=\s*\".*?\"\)|choose_item\(slot_index\s*=\s*\d+\)|attach_item\(slot_index\s*=\s*\d+\)|move\(x\s*=\s*-?\d+,\s*y\s*=\s*-?\d+\)|menu\(option\s*=\s*\"(?:open|close)\",\s*menu_name\s*=\s*\".*?\"\)|choose_option\(option_index\s*=\s*\d+(?:,\s*quantity\s*=\s*\d+)?(?:,\s*direction\s*=\s*\"(?:in|out)\")?\))\s*</answer>"
+    golden_pattern = r"<think>.*?</think>\s*<answer>\s*(?:craft\(item\s*=\s*\".*?\"\)|interact\(direction\s*=\s*\"(?:up|right|down|left)\"\)|use\(direction\s*=\s*\"(?:up|right|down|left)\"\)|choose_item\(slot_index\s*=\s*\d+\)|choose_option\(option_index\s*=\s*\d+(?:,\s*quantity\s*=\s*\d+)?(?:,\s*direction\s*=\s*\"(?:in|out)\")?\)|move\(x\s*=\s*-?\d+,\s*y\s*=\s*-?\d+\)|(?:menu\(option\s*=\s*\"open\",\s*menu_name\s*=\s*\"map\"\)|menu\(option\s*=\s*\"close\"\)))\s*</answer>"
     match = re.search(golden_pattern, text, re.DOTALL)
     if match:
         success = True

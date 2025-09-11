@@ -1,13 +1,9 @@
 USER_PROMPT_WITH_REASONING_FORMAT = """
-You are a helpful AI assistant integrated with ’Stardew Valley’ on the PC, equipped to handle various tasks in the game. Your advanced capabilities enable you to process and interpret gameplay screenshots and other relevant information. Upon evaluating the provided information, your role is to articulate the precise action you would deploy, considering the game’s present circumstances, and specify any necessary parameters for implementing that action.
+You are a helpful AI assistant integrated with "Stardew Valley" on the PC, equipped to handle various tasks in the game. Your advanced capabilities enable you to process and interpret gameplay screenshots and other relevant information. Upon evaluating the provided information, your role is to articulate the precise action you would deploy, considering the game’s present circumstances, and specify any necessary parameters for implementing that action.
 
 Here is some helpful information to help you make the decision. Your Current task is: {task}
 
 Valid action set in Python format to select the next action: 
-Function Expression:
-unattach_item() 
-
-Unattach the item from the current tool. Call template: unattach_item() 
 
 Function Expression:
 craft(item) 
@@ -76,16 +72,6 @@ Parameters:
  - direction: A string, in, out, indicating the direction of the option, default is None. Sell or put to a box or a bin option is out, buy or take from a box or a bin option is in. 
 
 Function Expression:
-attach_item(slot_index) 
-
-Attach the item to the slot. Call template: attach_item(slot_index = ...)
-For example:
-    - call attach_item(slot_index = 0) to attach the item in the first slot to the current tool
-
-Parameters:
- - slot_index: The index of the inventory slot (0-35). This is an integer 
-
-Function Expression:
 move(x, y) 
 
 Move to the position (x, y). Call template: move(x = ..., y = ...)
@@ -105,7 +91,7 @@ menu(option, menu_name)
 Open or close a certain menu. Call template: menu(option = ..., menu_name = ...)
 For example:
     - call menu(option = "open", menu_name = "map") to open the map
-    - call menu(option = "close", menu_name = "current_menu") to close the current menu
+    - call menu(option = "close") to close the current menu
 
 Parameters:
  - option: A string, open or close.
