@@ -91,7 +91,8 @@ class StarDojoLLMIsolated(StarDojo):
             time.sleep(5)
             if needs_shared_memory:
                 self.action_proxy.set_mmap_reader()
-            self.agent.reconfigure_root_logger(port=None, task=None)
+            if self.agent is not None:
+                self.agent.reconfigure_root_logger(port=None, task=None)
 
     def get_last_part(self, s):
         if isinstance(s, str):
@@ -287,6 +288,7 @@ class StarDojoLLMIsolated(StarDojo):
         action = skill_steps
         exec_info = self.agent.gm.execute_actions(action, self.skill_executer)
 
+        time.sleep(3)
         self.last_action = action[0]
 
         self.step_num += 1

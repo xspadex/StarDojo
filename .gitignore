@@ -227,3 +227,4 @@ env/logs/evaluations.npz
 **/backup_logs/
 
 screen_shot_buffer*/
+env/parallel_vlm_grounding_data*

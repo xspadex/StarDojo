@@ -10,7 +10,7 @@ from PIL import Image
 
 # 假设你的环境代码位于一个名为 stardew_env 的包中
 # 如果不是，请相应地修改导入路径
-from stardew_env import StarDojo
+from eval_agent import StarDojoLLMIsolated
 
 # --- 配置区 ---
 
@@ -18,11 +18,11 @@ from stardew_env import StarDojo
 #    确保这些名称与游戏中的 Location Name 完全一致
 MAPS_TO_VISIT = [
     "Farm",
-    "Town",
-    "Mountain",
-    "Forest",
-    "Beach",
-    "Desert"
+    # "Town",
+    # "Mountain",
+    # "Forest",
+    # "Beach",
+    # "Desert"
 ]
 
 # 2. 定义输出数据的文件夹
@@ -55,12 +55,16 @@ class DataCollector:
         self.repeat_num = repeat_num
         # 创建输出目录
         os.makedirs(self.screenshots_path, exist_ok=True)
+
+        from env.tasks.utils import load_task
+        task = load_task.load_task("farming_lite", 0)
         
         logging.info("正在连接到星露谷物语环境...")
-        self.env = StarDojo(
+        self.env = StarDojoLLMIsolated(
             port=port,
             save_index=save_index,
-            new_game=False,
+            new_game=True,
+            task=task,
             image_save_path=self.screenshots_path,
             output_video=False,
             max_image_storage=1
@@ -98,7 +102,6 @@ class DataCollector:
         object_keys = {
             'debris_at_tile',    # 杂物 (石头, 木头, 杂草)
             'object_at_tile',    # 放置的物品或可采集的物品
-            'crop_at_tile',      # 农作物
             'terrain_at_tile',   # 例如树木
             'door_info'          # 地图出口或建筑的门 (例如 "Town", "FarmHouse")
         }
@@ -108,9 +111,6 @@ class DataCollector:
             if obj_data:
                 obj_name = ""
                 # 根据不同key的数据结构提取名称
-                if key == 'crop_at_tile' and isinstance(obj_data, dict):
-                    # 假设作物信息是一个字典
-                    obj_name = obj_data.get('seed_name', 'Unknown Crop')
                 elif isinstance(obj_data, str):
                     obj_name = self.get_last_part(obj_data)
                 elif key == 'exit_info' and isinstance(obj_data, str):
@@ -157,6 +157,26 @@ class DataCollector:
         except Exception as e:
             logging.error(f"保存截图失败: {full_image_path}. 错误: {e}")
             return
+
+        crops = obs.get('crops', [])
+        for crop in crops:
+            crop_name = crop['id']
+            position = crop['position']
+            if abs(position[0]) > 9 or abs(position[1]) > 5:
+                continue
+            current_phase = crop['current_phase']
+            data_record = {
+                "image_file": os.path.join("screenshots", image_filename), # Use relative path
+                "object_name": crop_name,
+                "object_position": position,
+                "player_position": player_pos,
+                "map_name": current_location,
+                "type": "crop",
+            }
+            with open(self.metadata_path, 'a') as f:
+                    f.write(json.dumps(data_record) + '\n')
+                
+                collected_count += 1
         
         collected_count = 0
         for tile in tiles_to_scan:
@@ -203,6 +223,10 @@ class DataCollector:
                 self.action_proxy.teleport_random() 
                 # 等待一小段时间，确保屏幕内容已更新
                 time.sleep(0.5) 
+                import random
+                direction = random.choice([0,1,2,3])
+                self.action_proxy.turn(direction)
+                time.sleep(0.1)
                 self.scan_current_map_and_collect_data()
         
         self.cleanup()
@@ -221,7 +245,7 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="为VLM训练批量生成星露谷物语的Grounding数据")
     parser.add_argument("--port", type=int, default=10783, help="游戏服务器的端口号")
     parser.add_argument("--save_index", type=int, default=0, help="游戏存档的索引")
-    parser.add_argument("--repeat_num", type=int, default=200, help="在每个地图上随机传送和采集的次数")
+    parser.add_argument("--repeat_num", type=int, default=5000, help="在每个地图上随机传送和采集的次数")
     
     args = parser.parse_args()
 

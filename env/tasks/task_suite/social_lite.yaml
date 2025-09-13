@@ -30,7 +30,7 @@ purchase_1_muscle_remedy:
   difficulty: medium
 
 sell_5_parsnip_to_pierre:
-  id: 2
+  id: 3
   object: Parsnip
   quantity: 5
   tool: null
@@ -140,7 +140,7 @@ move_1_coop:
   difficulty: medium
 
 upgrade_farmhouse:
-  id: 3
+  id: 14
   object: Farmhouse
   quantity: 1
   tool: null

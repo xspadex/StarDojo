@@ -29,15 +29,40 @@ MINI_TASKS = [
     {"name": "farming_lite", "id": 0},
     {"name": "farming_lite", "id": 1},
     {"name": "farming_lite", "id": 3},
-    {"name": "farming_lite", "id": 6},
     {"name": "crafting_lite", "id": 1},
     {"name": "crafting_lite", "id": 5},
     {"name": "crafting_lite", "id": 10},
     {"name": "exploration_lite", "id": 0},
     {"name": "exploration_lite", "id": 7},
-    {"name": "exploration_lite", "id": 13},
     {"name": "social_lite", "id": 9},
+]
+
+ADD_TASKS = [
     {"name": "social_lite", "id": 10},
+    {"name": "social_lite", "id": 7},
+    {"name": "social_lite", "id": 1},
+    {"name": "social_lite", "id": 2},
+    {"name": "social_lite", "id": 3},
+    {"name": "social_lite", "id": 0},
+
+    {"name": "farming_lite", "id": 4},
+    {"name": "farming_lite", "id": 5},
+    {"name": "farming_lite", "id": 6},
+    {"name": "farming_lite", "id": 8},
+    {"name": "farming_lite", "id": 9},
+    {"name": "farming_lite", "id": 16},
+
+    {"name": "exploration_lite", "id": 1},
+    {"name": "exploration_lite", "id": 2},
+    {"name": "exploration_lite", "id": 17},
+    {"name": "exploration_lite", "id": 19},
+    {"name": "exploration_lite", "id": 21},
+
+    {"name": "crafting_lite", "id": 6},
+    {"name": "crafting_lite", "id": 10},
+
+    {"name": "combat_lite", "id": 0},
+    {"name": "combat_lite", "id": 3},
 ]
 
 def get_tasks_list(task_name: str) -> List[Dict[str, Any]]:
@@ -178,7 +203,18 @@ if __name__ == "__main__":
     # main(second_half)
     # main(first_half)
     # main(second_half)
-    task0 = [
-       {"name": "farming_lite", "id": 0},
+    # task0 = [
+    #    {"name": "farming_lite", "id": 0},
+    # ]
+    # main(task0)
+    ALL_TASKS_COMBINED = MINI_TASKS + ADD_TASKS
+
+    FIX_UNFINISHED = [
+        {"name": "combat_lite", "id": 3},
+        {"name": "social_lite", "id": 7},
+        {"name": "social_lite", "id": 10},
     ]
-    main(task0)
+    mini_tasks_in_3_groups = [FIX_UNFINISHED[i:i+3] for i in range(0, len(FIX_UNFINISHED), 3)]
+    for mini_tasks in mini_tasks_in_3_groups:
+        print(f"Running {len(mini_tasks)} tasks in parallel")
+        main(mini_tasks)

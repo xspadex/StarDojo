@@ -1,7 +1,7 @@
 {
     "key_var": "OPEN_SRC_KEY",
     "emb_model": "text-embedding-ada-002",
-    "comp_model": "/fs/scratch/PFIN0007/jiang/VLM-R1/checkpoints/rl/Qwen2.5-VL-3B-Instruct-starr1-success_and_short_k1/",
+    "comp_model": "VLM-R1/checkpoints/rl/Qwen2.5-VL-3B-Instruct-starr1-success_and_short_k1_0911_2/",
     "base_url": "http://localhost:8000/v1",
     "is_azure": false
 }

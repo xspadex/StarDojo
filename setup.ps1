@@ -81,3 +81,8 @@ foreach ($path in $pathsToAdd) {
 
 Write-Host "Final PYTHONPATH: $($env:PYTHONPATH)"
 Write-Host "--- Setup complete. You can now run other commands in this terminal. ---"
+
+$env:PYTHONPATH += ";$(Get-Location)\env"
+$env:PYTHONPATH += ";$(Get-Location)"
+$env:PYTHONPATH += ";$(Get-Location)\agent\stardojo"
+$env:PYTHONPATH += ";$(Get-Location)\agent"
