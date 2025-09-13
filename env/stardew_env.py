@@ -660,6 +660,9 @@ if __name__ == "__main__":
     # env.action_proxy.resume_game()
     # env.action_proxy.warp("JojaMart", 10, 10)
     # env.action_proxy.interact(direction="up")
+
+    observation = env._get_obs()
+    print("obs")
     # env.action_proxy.move(0, 1)
     obs = env._get_obs()
     print("debug")

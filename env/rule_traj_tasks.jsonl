@@ -1,0 +1,6 @@
+{"task": "chop_10_wood_with_axe", "save": "save_new", "init_commands": null, "success": true, "task_type": "exploration_lite", "task_id": 11}
+{"task": "craft_1_wood_fence", "save": "save_new", "init_commands": null, "task_type": "crafting_lite", "task_id": 1}
+{"task": "forage_10_hay_with_scythe", "save": "save_new", "init_commands": null, "task_type": "exploration_lite", "task_id": 17}
+{"task": "clear_10_weeds_with_scythe", "save": "save_new", "init_commands": null, "task_type": "farming_lite", "task_id": 0}
+{"task": "clear_5_stone_with_pickaxe", "save": "save_new", "init_commands": null, "task_type": "farming_lite", "task_id": 1}
+{"task": "till_5_tile_with_hoe", "save": "save_new", "init_commands": null, "task_type": "farming_lite", "task_id": 3}
